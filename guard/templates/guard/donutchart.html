@@ -1,0 +1,188 @@
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.min.js" integrity="sha512-L0Shl7nXXzIlBSUUPpxrokqq4ojqgZFQczTYlGjzONGTDAcLremjwaWv5A+EDLnxhQzY5xUZPWLOLqYRkY0Cbw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script>
+
+
+
+
+
+
+
+
+
+
+
+function filterDataByInterval(interval, datapoints) {
+    const now = new Date();
+    let filterFunction;
+
+    switch (interval) {
+        case 'daily':
+            filterFunction = entry => {
+                const entryDate = new Date(entry.Timestamp);
+                return entryDate.toDateString() === now.toDateString();
+            };
+            break;
+        case 'weekly':
+            filterFunction = entry => {
+                const entryDate = new Date(entry.Timestamp);
+                const weekAgo = new Date(now);
+                weekAgo.setDate(now.getDate() - 7);
+                return entryDate >= weekAgo;
+            };
+            break;
+        case 'monthly':
+            filterFunction = entry => {
+                const entryDate = new Date(entry.Timestamp);
+                return entryDate.getMonth() === now.getMonth();
+            };
+            break;
+        default:
+            filterFunction = () => true; // Default to show all data
+            break;
+    }
+
+    return datapoints.filter(filterFunction);
+}
+
+// Function to initialize the chart
+function initChart() {
+    const ctx = document.getElementById('myChart-2').getContext('2d');
+
+    const accelChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: [], // Initialize with empty labels
+            datasets: [
+                {
+                    label: 'X-axis',
+                    borderColor: 'rgb(255, 99, 132)',
+                    data: [], // Initialize with empty data
+                    fill: false
+                },
+                {
+                    label: 'Y-axis',
+                    borderColor: 'rgb(54, 162, 235)',
+                    data: [], // Initialize with empty data
+                    fill: false
+                },
+                {
+                    label: 'Z-axis',
+                    borderColor: 'rgb(75, 192, 192)',
+                    data: [], // Initialize with empty data
+                    fill: false
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                title: {
+                    display: true,
+                    text: 'Accelerometer Data'
+                }
+            },
+            scales: {
+                x: {
+                    display: true,
+                    title: {
+                        display: true,
+                        text: 'Timestamp'
+                    }
+                },
+                y: {
+                    display: true,
+                    title: {
+                        display: true,
+                        text: 'Acceleration (m/s^2)'
+                    }
+                }
+            }
+        }
+    });
+
+    return accelChart;
+}
+
+// Function to update the chart with new data
+function updateChart(chart, interval, datapoints) {
+    const filteredData = filterDataByInterval(interval, datapoints);
+
+    // Extract timestamps and data values for each axis
+    const timestamps = filteredData.map(entry => entry.Timestamp);
+    const xAxisData = filteredData.map(entry => parseFloat(entry['X-axis (m/s^2)']));
+    const yAxisData = filteredData.map(entry => parseFloat(entry['Y-axis (m/s^2)']));
+    const zAxisData = filteredData.map(entry => parseFloat(entry['Z-axis (m/s^2)']));
+
+    // Update chart data
+    chart.data.labels = timestamps;
+    chart.data.datasets[0].data = xAxisData;
+    chart.data.datasets[1].data = yAxisData;
+    chart.data.datasets[2].data = zAxisData;
+
+    // Update chart title
+    chart.options.plugins.title.text = `Accelerometer Data (${interval.charAt(0).toUpperCase() + interval.slice(1)})`;
+
+    // Update the chart
+    chart.update();
+}
+
+// Initialize the chart when the page loads
+document.addEventListener('DOMContentLoaded', function() {
+    const get_path=['{{ppG_sensor_graph}}']
+    // console.log(get_path,"this")
+    if (get_path==['']){
+
+    const intervalSelect = document.getElementById('intervalSelect');
+
+            intervalSelect.style.display='none';
+
+        }
+const path=`http://127.0.0.1:8000/${get_path}`.toString();
+
+
+d3.csv(path).then(function(datapoints){
+     datapoints
+
+
+    const accelChart = initChart();
+
+    // Initial chart update based on default selection
+    updateChart(accelChart, 'daily', datapoints);
+
+    // Event listener for select change
+    const intervalSelect = document.getElementById('intervalSelect');
+    console.log(get_path,"this")
+    
+    intervalSelect.addEventListener('change', function() {
+        const selectedInterval = this.value;
+        updateChart(accelChart, selectedInterval, datapoints);
+    });
+});
+});
+
+
+
+
+
+
+
+
+
+
+
+
+
+</script>
+
+
+
+
+
+
+
+
+    
+
+
+

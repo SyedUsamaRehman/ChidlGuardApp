@@ -1,0 +1,77 @@
+{% extends 'base.html' %}
+
+
+
+{% block content %}
+
+
+
+{% if message != 'DataNotFound' %}
+<div class="d-flex flex-column">
+
+    <div style="width: 80%; margin: auto;">
+        <div>
+            <select id="intervalSelect1">
+                <option value="daily">Daily</option>
+                <option value="weekly">Weekly</option>
+                <option value="monthly">Monthly</option>
+            </select>
+        </div>
+
+
+
+        <canvas id="myChart"></canvas>
+</div>
+
+<div style="width: 80%; margin: auto;">
+
+
+
+    <div>
+        <select id="intervalSelect">
+            <option value="daily">Daily</option>
+            <option value="weekly">Weekly</option>
+            <option value="monthly">Monthly</option>
+        </select>
+    </div>
+    <canvas id="myChart-2"></canvas>
+</div>
+
+
+<div style="width: 80%; margin: auto;">
+    <div>
+        <select id="intervalSelect2">
+            <option value="daily">Daily</option>
+            <option value="weekly">Weekly</option>
+            <option value="monthly">Monthly</option>
+        </select>
+    </div>
+    <canvas id="myChart-3"></canvas>
+</div>
+</div>  
+{% else %}
+<p>{{message}}</p>
+
+
+{% endif %}
+
+
+
+
+
+
+
+
+
+
+
+{% include 'guard/barchart.html' %}
+{% include 'guard/donutchart.html' %}
+{% include 'guard/linechart.html' %}
+
+
+
+
+
+
+{% endblock %}
