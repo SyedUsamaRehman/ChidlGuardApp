@@ -176,6 +176,7 @@ const intervalSelect = document.getElementById('intervalSelect2');
  document.addEventListener("DOMContentLoaded", function() {
      // Replace `{{ oximeter_values_graph_data|safe }}` with the actual context variable
      const oximeterValuesGraphData = JSON.parse('{{ oximeter_values_graph|escapejs }}');
+    
      console.log(oximeterValuesGraphData)
      const intervalSelect = document.getElementById('intervalSelect2');
  
@@ -193,12 +194,12 @@ const intervalSelect = document.getElementById('intervalSelect2');
          let filterFunction;
  
          switch (interval) {
-             case 'daily':
-                 filterFunction = entry => {
-                     const entryDate = new Date(entry.Timestamp);
-                     return entryDate.toDateString() === now.toDateString();
-                 };
-                 break;
+            //  case 'daily':
+            //      filterFunction = entry => {
+            //          const entryDate = new Date(entry.Timestamp);
+            //          return entryDate.toDateString() === now.toDateString();
+            //      };
+            //      break;
              case 'weekly':
                  filterFunction = entry => {
                      const entryDate = new Date(entry.Timestamp);
@@ -207,7 +208,7 @@ const intervalSelect = document.getElementById('intervalSelect2');
                      return entryDate >= weekAgo;
                  };
                  break;
-             case 'monthly':
+             case 'daily':
                  filterFunction = entry => {
                      const entryDate = new Date(entry.Timestamp);
                      return entryDate.getMonth() === now.getMonth() && entryDate.getFullYear() === now.getFullYear();
@@ -288,8 +289,8 @@ const intervalSelect = document.getElementById('intervalSelect2');
          const selectedInterval = this.value;
          updateChart(selectedInterval);
      });
-     const childPk = "{{ children.pk }}";  // Pass the pk to JavaScript
-     console.log('Child PK:', childPk);
+     // Pass the pk to JavaScript
+    
  });
  </script>
  

@@ -7,12 +7,12 @@
      let filterFunction;
  
      switch (interval) {
-         case 'daily':
-             filterFunction = entry => {
-                 const entryDate = new Date(entry.Timestamp);
-                 return entryDate.toDateString() === now.toDateString();
-             };
-             break;
+        //  case 'daily':
+        //      filterFunction = entry => {
+        //          const entryDate = new Date(entry.Timestamp);
+        //          return entryDate.toDateString() === now.toDateString();
+        //      };
+        //      break;
          case 'weekly':
              filterFunction = entry => {
                  const entryDate = new Date(entry.Timestamp);
@@ -21,7 +21,7 @@
                  return entryDate >= weekAgo;
              };
              break;
-         case 'monthly':
+         case 'daily':
              filterFunction = entry => {
                  const entryDate = new Date(entry.Timestamp);
                  return entryDate.getMonth() === now.getMonth() && entryDate.getFullYear() === now.getFullYear();
@@ -118,7 +118,8 @@
  
  // Initialize the chart when the page loads
  document.addEventListener('DOMContentLoaded', function() {
-     const get_path = JSON.parse('{{accelo_meter_graph|escapejs}}'); // Updated variable name
+     const get_path = JSON.parse( '{{accelo_meter_graph|escapejs}}'); // Updated variable name
+     
      console.log(get_path,"ye")
     //  console.log(get_path, "this");
     let datapoints=get_path

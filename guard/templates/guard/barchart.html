@@ -183,12 +183,12 @@ document.addEventListener("DOMContentLoaded", function() {
         let filterFunction;
 
         switch (interval) {
-            case 'daily':
-                filterFunction = entry => {
-                    const entryDate = new Date(entry.Timestamp);
-                    return entryDate.toDateString() === now.toDateString();
-                };
-                break;
+            // case 'daily':
+            //     filterFunction = entry => {
+            //         const entryDate = new Date(entry.Timestamp);
+            //         return entryDate.toDateString() === now.toDateString();
+            //     };
+            //     break;
             case 'weekly':
                 filterFunction = entry => {
                     const entryDate = new Date(entry.Timestamp);
@@ -197,7 +197,7 @@ document.addEventListener("DOMContentLoaded", function() {
                     return entryDate >= weekAgo;
                 };
                 break;
-            case 'monthly':
+            case 'daily':
                 filterFunction = entry => {
                     const entryDate = new Date(entry.Timestamp);
                     return entryDate.getMonth() === now.getMonth();
