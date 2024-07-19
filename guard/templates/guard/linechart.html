@@ -1,4 +1,4 @@
-<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js" integrity="sha512-vc58qvvBdrDR4etbxMdlTt4GBQk1qjvyORR2nrsPsFPyrs+/u5c3+1Ct6upOgdZoIl7eq6k3a1UPDSNAQi/32A==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js" integrity="sha512-vc58qvvBdrDR4etbxMdlTt4GBQk1qjvyORR2nrsPsFPyrs+/u5c3+1Ct6upOgdZoIl7eq6k3a1UPDSNAQi/32A==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.min.js" integrity="sha512-L0Shl7nXXzIlBSUUPpxrokqq4ojqgZFQczTYlGjzONGTDAcLremjwaWv5A+EDLnxhQzY5xUZPWLOLqYRkY0Cbw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 
 
@@ -12,90 +12,6 @@
 
 
 
-// document.addEventListener("DOMContentLoaded",function(){
-
-
-
-
-
-// let get_path=['{{oximeter_values_graph}}'];
-
-// let path=`http://127.0.0.1:8000/${get_path}`.toString();
-
-
-
-// const timestamp=[]
-// const Perspiration_Level_µS=[]
-
-// console.log(path)
-// d3.csv(path).then(function(datapoints){
-
-//     console.log(datapoints)
-// const timestamps = datapoints.map(entry => entry.Timestamp);
-// const Heart_Rate  = datapoints.map(entry => parseFloat(entry['Heart Rate (bpm)']));
-// const SpO2 = datapoints.map(entry => parseFloat(entry['SpO2 (%)']));
-
-
-
-
-
-//     // const myChart = new Chart(ctx, {...});
-//     const ctx = document.getElementById('myChart-3').getContext('2d');
-//     const accelChart = new Chart(ctx, {
-//     type: 'bar',
-//     data: {
-//         labels: timestamps,
-//         datasets: [
-//             {
-//                 label: 'Heart Rate (bpm)',
-//                 backgroundColor: 'rgb(255, 99, 132)',
-//                 data:Heart_Rate,
-//             },
-//             {
-//                 label: 'SpO2 (%)',
-//                 backgroundColor: 'rgb(54, 162, 235)',
-//                 data: SpO2,
-//             },
-            
-//         ]
-//     },
-//     options: {
-//         responsive: true,
-//         plugins: {
-//             title: {
-//                 display: true,
-//                 text: 'oximeter_values_graph (Bar Chart)'
-//             }
-//         },
-//         scales: {
-//             x: {
-//                 display: true,
-//                 title: {
-//                     display: true,
-//                     text: 'Timestamp'
-//                 }
-//             },
-//             y: {
-//                 display: true,
-//                 title: {
-//                     display: true,
-//                     text: 'SpO2 (%)'
-//                 },
-//                 suggestedMin: 0  // Adjust as necessary
-//             }
-//         }
-//     }
-
-
-
-// })
-
-
-// });
-
-
-
-// });
 
 
 
@@ -126,6 +42,8 @@ const intervalSelect = document.getElementById('intervalSelect2');
             case 'daily':
                 filterFunction = entry => {
                     const entryDate = new Date(entry.Timestamp);
+                    // const date=[entry.Timestamp]
+                    // console.log(date[date.length-1],"ye")
                     return entryDate.toDateString() === now.toDateString();
                 };
                 break;
@@ -243,7 +161,7 @@ const intervalSelect = document.getElementById('intervalSelect2');
 </script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-
+ -->
 
 
 
@@ -251,4 +169,127 @@ const intervalSelect = document.getElementById('intervalSelect2');
 
 
     
-
+ <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js" integrity="sha512-vc58qvvBdrDR4etbxMdlTt4GBQk1qjvyORR2nrsPsFPyrs+/u5c3+1Ct6upOgdZoIl7eq6k3a1UPDSNAQi/32A==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+ <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.min.js" integrity="sha512-L0Shl7nXXzIlBSUUPpxrokqq4ojqgZFQczTYlGjzONGTDAcLremjwaWv5A+EDLnxhQzY5xUZPWLOLqYRkY0Cbw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+ 
+ <script>
+ document.addEventListener("DOMContentLoaded", function() {
+     // Replace `{{ oximeter_values_graph_data|safe }}` with the actual context variable
+     const oximeterValuesGraphData = JSON.parse('{{ oximeter_values_graph|escapejs }}');
+     console.log(oximeterValuesGraphData)
+     const intervalSelect = document.getElementById('intervalSelect2');
+ 
+     if (!oximeterValuesGraphData || oximeterValuesGraphData.length === 0) {
+         intervalSelect.style.display = 'none';
+         return;
+     }
+ 
+     // Initialize variables to hold chart instance and data
+     let oximeterChart;
+     let originalData = oximeterValuesGraphData; // Data fetched from Django context
+ 
+     function filterDataByInterval(interval, datapoints) {
+         const now = new Date();
+         let filterFunction;
+ 
+         switch (interval) {
+             case 'daily':
+                 filterFunction = entry => {
+                     const entryDate = new Date(entry.Timestamp);
+                     return entryDate.toDateString() === now.toDateString();
+                 };
+                 break;
+             case 'weekly':
+                 filterFunction = entry => {
+                     const entryDate = new Date(entry.Timestamp);
+                     const weekAgo = new Date(now);
+                     weekAgo.setDate(now.getDate() - 7);
+                     return entryDate >= weekAgo;
+                 };
+                 break;
+             case 'monthly':
+                 filterFunction = entry => {
+                     const entryDate = new Date(entry.Timestamp);
+                     return entryDate.getMonth() === now.getMonth() && entryDate.getFullYear() === now.getFullYear();
+                 };
+                 break;
+             default:
+                 filterFunction = () => true;
+                 break;
+         }
+ 
+         return datapoints.filter(filterFunction);
+     }
+ 
+     function updateChart(interval) {
+         const filteredData = filterDataByInterval(interval, originalData);
+ 
+         const timestamps = filteredData.map(entry => new Date(entry.Timestamp).toLocaleString());
+         const heartRate = filteredData.map(entry => parseFloat(entry['Heart Rate (bpm)']));
+         const spo2 = filteredData.map(entry => parseFloat(entry['SpO2 (%)']));
+ 
+         oximeterChart.data.labels = timestamps;
+         oximeterChart.data.datasets[0].data = heartRate;
+         oximeterChart.data.datasets[1].data = spo2;
+ 
+         oximeterChart.options.plugins.title.text = `Oximeter Values (${interval.charAt(0).toUpperCase() + interval.slice(1)})`;
+         oximeterChart.update();
+     }
+ 
+     const ctx = document.getElementById('myChart-3').getContext('2d');
+     oximeterChart = new Chart(ctx, {
+         type: 'line',
+         data: {
+             labels: [],
+             datasets: [
+                 {
+                     label: 'Heart Rate (bpm)',
+                     backgroundColor: 'rgb(255, 99, 132)',
+                     data: [],
+                 },
+                 {
+                     label: 'SpO2 (%)',
+                     backgroundColor: 'rgb(54, 162, 235)',
+                     data: [],
+                 },
+             ]
+         },
+         options: {
+             responsive: true,
+             plugins: {
+                 title: {
+                     display: true,
+                     text: 'Oximeter Values Graph (Bar Chart)'
+                 }
+             },
+             scales: {
+                 x: {
+                     display: true,
+                     title: {
+                         display: true,
+                         text: 'Timestamp'
+                     }
+                 },
+                 y: {
+                     display: true,
+                     title: {
+                         display: true,
+                         text: 'Values'
+                     },
+                     suggestedMin: 0
+                 }
+             }
+         }
+     });
+ 
+     updateChart('daily');
+ 
+     intervalSelect.addEventListener('change', function() {
+         const selectedInterval = this.value;
+         updateChart(selectedInterval);
+     });
+     const childPk = "{{ children.pk }}";  // Pass the pk to JavaScript
+     console.log('Child PK:', childPk);
+ });
+ </script>
+ 

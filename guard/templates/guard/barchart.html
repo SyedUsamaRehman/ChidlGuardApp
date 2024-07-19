@@ -1,4 +1,4 @@
-<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js" integrity="sha512-vc58qvvBdrDR4etbxMdlTt4GBQk1qjvyORR2nrsPsFPyrs+/u5c3+1Ct6upOgdZoIl7eq6k3a1UPDSNAQi/32A==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js" integrity="sha512-vc58qvvBdrDR4etbxMdlTt4GBQk1qjvyORR2nrsPsFPyrs+/u5c3+1Ct6upOgdZoIl7eq6k3a1UPDSNAQi/32A==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.min.js" integrity="sha512-L0Shl7nXXzIlBSUUPpxrokqq4ojqgZFQczTYlGjzONGTDAcLremjwaWv5A+EDLnxhQzY5xUZPWLOLqYRkY0Cbw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 <script>
 
@@ -6,19 +6,21 @@
 
 
 document.addEventListener("DOMContentLoaded", function() {
-    let get_path = ['{{perspiration_sensor}}'];
-    if (get_path==[' ']){
+    const get_path = JSON.parse(JSON.stringify('{{perspiration_sensor}}'));
+    if (!get_path||get_path.length===0){
 
 const intervalSelect = document.getElementById('intervalSelect1');
 
         intervalSelect.style.display='none';
 
     }
-    let path = `http://127.0.0.1:8000/${get_path}`;
+console.log(get_path)
 
-    // Initialize variables to hold chart instance and data
+    // Initialize variables to hold chart instance ancod data
     let perspirationChart;
-    let originalData; // Hold the original data fetched from CSV
+    let datapoints=get_path;
+    
+     // Hold the original data fetched from CSV
 
     // Function to filter data based on interval
     function filterDataByInterval(interval, datapoints) {
@@ -74,7 +76,7 @@ const intervalSelect = document.getElementById('intervalSelect1');
     }
 
     // Use D3.js to fetch CSV data
-    d3.csv(path).then(function(datapoints) {
+    
         console.log(datapoints); // Ensure data is fetched correctly
         originalData = datapoints; // Store original data for filtering
 
@@ -137,37 +139,8 @@ const intervalSelect = document.getElementById('intervalSelect1');
         });
     }).catch(function(error) {
         console.error('Error fetching data:', error);
-    });
+
 });
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -183,4 +156,130 @@ const intervalSelect = document.getElementById('intervalSelect1');
 
 
     
+ -->
 
+
+
+ <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js" integrity="sha512-vc58qvvBdrDR4etbxMdlTt4GBQk1qjvyORR2nrsPsFPyrs+/u5c3+1Ct6upOgdZoIl7eq6k3a1UPDSNAQi/32A==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.min.js" integrity="sha512-L0Shl7nXXzIlBSUUPpxrokqq4ojqgZFQczTYlGjzONGTDAcLremjwaWv5A+EDLnxhQzY5xUZPWLOLqYRkY0Cbw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    // Get data from Django context
+    const get_path = JSON.parse('{{ perspiration_sensor|escapejs }}');
+    
+    if (!get_path || get_path.length === 0) {
+        const intervalSelect = document.getElementById('intervalSelect1');
+        intervalSelect.style.display = 'none';
+        return; // Exit early if no data
+    }
+
+    // Initialize variables to hold chart instance and data
+    let perspirationChart;
+    let originalData = get_path; // Store original data for filtering
+    
+    // Function to filter data based on interval
+    function filterDataByInterval(interval, datapoints) {
+        const now = new Date();
+        let filterFunction;
+
+        switch (interval) {
+            case 'daily':
+                filterFunction = entry => {
+                    const entryDate = new Date(entry.Timestamp);
+                    return entryDate.toDateString() === now.toDateString();
+                };
+                break;
+            case 'weekly':
+                filterFunction = entry => {
+                    const entryDate = new Date(entry.Timestamp);
+                    const weekAgo = new Date(now);
+                    weekAgo.setDate(now.getDate() - 7);
+                    return entryDate >= weekAgo;
+                };
+                break;
+            case 'monthly':
+                filterFunction = entry => {
+                    const entryDate = new Date(entry.Timestamp);
+                    return entryDate.getMonth() === now.getMonth();
+                };
+                break;
+            default:
+                filterFunction = () => true; // Default to show all data
+                break;
+        }
+        
+        return datapoints.filter(filterFunction);
+    }
+
+    // Function to update the chart with filtered data
+    function updateChart(interval) {
+        const filteredData = filterDataByInterval(interval, originalData);
+
+        // Extract data for chart
+        const timestamps = filteredData.map(entry => entry.Timestamp);
+        const perspirationLevels = filteredData.map(entry => parseFloat(entry['Perspiration Level (µS)']));
+
+        // Update chart data
+        perspirationChart.data.labels = timestamps;
+        perspirationChart.data.datasets[0].data = perspirationLevels;
+
+        // Update chart title
+        perspirationChart.options.plugins.title.text = `Perspiration Sensor Data (${interval.charAt(0).toUpperCase() + interval.slice(1)})`;
+
+        // Update the chart
+        perspirationChart.update();
+    }
+
+    // Initialize Chart.js and render the chart
+    const ctx = document.getElementById('myChart').getContext('2d');
+    perspirationChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: [],
+            datasets: [
+                {
+                    label: 'Perspiration Level (µS)',
+                    backgroundColor: 'rgb(255, 99, 132)',
+                    data: [],
+                },
+            ]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                title: {
+                    display: true,
+                    text: 'Perspiration Sensor Data (Bar Chart)'
+                }
+            },
+            scales: {
+                x: {
+                    display: true,
+                    title: {
+                        display: true,
+                        text: 'Timestamp'
+                    }
+                },
+                y: {
+                    display: true,
+                    title: {
+                        display: true,
+                        text: 'Perspiration Level (µS)'
+                    },
+                    suggestedMin: 0 // Adjust as necessary
+                }
+            }
+        }
+    });
+
+    // Initial chart update based on default selection
+    updateChart('daily');
+
+    // Event listener for select change
+    const intervalSelect = document.getElementById('intervalSelect1');
+    intervalSelect.addEventListener('change', function() {
+        const selectedInterval = this.value;
+        updateChart(selectedInterval);
+    });
+});
+</script>

@@ -10,13 +10,17 @@
 <div class="d-flex flex-column">
 
     <div style="width: 80%; margin: auto;">
-        <div>
+        <div class="d-flex gap-3 w-100 btns">
             <select id="intervalSelect1">
                 <option value="daily">Daily</option>
                 <option value="weekly">Weekly</option>
                 <option value="monthly">Monthly</option>
             </select>
+            <div>
+                <button class="btn btn-dark ml-3" id="btn-presp" data-child-pk="{{childpk}}" data-graph-name="perspiration_sensor" >AddAbnormal</button>
+            </div>
         </div>
+        
 
 
 
@@ -27,27 +31,38 @@
 
 
 
-    <div>
+    <div class="d-flex gap-3 w-100 btns">
         <select id="intervalSelect">
             <option value="daily">Daily</option>
             <option value="weekly">Weekly</option>
             <option value="monthly">Monthly</option>
         </select>
+        <div>
+            <button class="btn btn-dark ml-3" id="btn-oxi" data-child-pk="{{childpk}}" data-graph-name="Accelerometer" >AddAbnormal</button>
+        </div>
     </div>
     <canvas id="myChart-2"></canvas>
 </div>
 
 
 <div style="width: 80%; margin: auto;">
-    <div>
+    <div class="d-flex gap-3 w-100 btns">
         <select id="intervalSelect2">
             <option value="daily">Daily</option>
             <option value="weekly">Weekly</option>
             <option value="monthly">Monthly</option>
         </select>
+        <div>
+            <button class="btn btn-dark ml-3" id="btn-acl" data-child-pk="{{childpk}}" data-graph-name="oximeter_values_graph" >AddAbnormal</button>
+        </div>
     </div>
     <canvas id="myChart-3"></canvas>
 </div>
+
+
+    
+</p>
+
 </div>  
 {% else %}
 <p>{{message}}</p>
@@ -65,13 +80,47 @@
 
 
 
+
 {% include 'guard/barchart.html' %}
 {% include 'guard/donutchart.html' %}
 {% include 'guard/linechart.html' %}
 
 
 
+<script>
 
+document.addEventListener('DOMContentLoaded', function() {
+    const endpoint='127.0.0.1:8000'
+    // Assuming you have an ID or class to identify the graph elements
+    document.querySelectorAll('.btn').forEach(graph => {
+        graph.addEventListener('click', function() {
+            const childPk = this.getAttribute('data-child-pk'); // Data attribute with child PK
+            const graphName = this.getAttribute('data-graph-name');
+            const ajaxUrl = '/check-abnormal-values/';
+            // Data attribute with graph name
+            console.log("hello")
+            // Send AJAX request to backend
+            $.ajax({
+                url: `${ajaxUrl}`,  // URL of the backend endpoint
+                method: 'POST',
+                data: {
+                    'child_pk': childPk,
+                    'graph_name': graphName,
+                    'csrfmiddlewaretoken': '{{ csrf_token }}'  // CSRF token for security
+                },
+                success: function(response) {
+                    alert('Abnormal values checked and notifications sent.');
+                },
+                error: function(error) {
+                    console.error('Error:', error);
+                }
+            });
+        });
+    });
+});
+
+
+</script>
 
 
 {% endblock %}
