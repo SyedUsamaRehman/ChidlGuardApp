@@ -16,7 +16,7 @@ class Csv_data(models.Model):
     child=models.ForeignKey(Child,on_delete=models.CASCADE,related_name='ChildCSVData')
     FILE_TYPE_CHOICES = [
         ('oximeter values graph', 'Oximeter Values Graph'),
-        ('ppG sensor graph', 'PPG Sensor Graph'),
+        ('accelo meter graph', 'Accelo Meter Graph'),
         ('perspiration sensor', 'Perspiration Sensor'),
     ]
     file_type = models.CharField(max_length=1000, choices=FILE_TYPE_CHOICES,null=True)

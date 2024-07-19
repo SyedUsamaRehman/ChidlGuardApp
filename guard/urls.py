@@ -6,6 +6,6 @@ urlpatterns = [
     path('dashboard/', views.dashboard, name='dashboard'),
     path("logout/", views.logout_user, name="logout_user"),
     path('getdata/<int:pk>/',views.get_data,name="getdata"),
-    path('check-abnormal-values/', views.check_abnormal_values, name='check_abnormal_values'),
+    path('check-abnormal-values/<int:pk>/<str:graph_name>/', views.check_abnormal_values, name='check_abnormal_values'),
 
 ]

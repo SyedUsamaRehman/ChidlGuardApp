@@ -17,7 +17,8 @@
                 <option value="monthly">Monthly</option>
             </select>
             <div>
-                <button class="btn btn-dark ml-3" id="btn-presp" data-child-pk="{{childpk}}" data-graph-name="perspiration_sensor" >AddAbnormal</button>
+            <a class="btn btn-dark ml-3" id="btn-oxi" href="{%  url 'check_abnormal_values' childpk 'oximeter values graph' %}"  >AddAbnormal</a>
+
             </div>
         </div>
         
@@ -38,7 +39,7 @@
             <option value="monthly">Monthly</option>
         </select>
         <div>
-            <button class="btn btn-dark ml-3" id="btn-oxi" data-child-pk="{{childpk}}" data-graph-name="Accelerometer" >AddAbnormal</button>
+            <a class="btn btn-dark ml-3" id="btn-oxi" href="{%  url 'check_abnormal_values' childpk 'accelerometer values graph' %}"  >AddAbnormal</a>
         </div>
     </div>
     <canvas id="myChart-2"></canvas>
@@ -53,7 +54,8 @@
             <option value="monthly">Monthly</option>
         </select>
         <div>
-            <button class="btn btn-dark ml-3" id="btn-acl" data-child-pk="{{childpk}}" data-graph-name="oximeter_values_graph" >AddAbnormal</button>
+            <a class="btn btn-dark ml-3" id="btn-oxi" href="{%  url 'check_abnormal_values' childpk 'perspiration sensor' %}"  >AddAbnormal</a>
+
         </div>
     </div>
     <canvas id="myChart-3"></canvas>
@@ -87,40 +89,6 @@
 
 
 
-<script>
-
-document.addEventListener('DOMContentLoaded', function() {
-    const endpoint='127.0.0.1:8000'
-    // Assuming you have an ID or class to identify the graph elements
-    document.querySelectorAll('.btn').forEach(graph => {
-        graph.addEventListener('click', function() {
-            const childPk = this.getAttribute('data-child-pk'); // Data attribute with child PK
-            const graphName = this.getAttribute('data-graph-name');
-            const ajaxUrl = '/check-abnormal-values/';
-            // Data attribute with graph name
-            console.log("hello")
-            // Send AJAX request to backend
-            $.ajax({
-                url: `${ajaxUrl}`,  // URL of the backend endpoint
-                method: 'POST',
-                data: {
-                    'child_pk': childPk,
-                    'graph_name': graphName,
-                    'csrfmiddlewaretoken': '{{ csrf_token }}'  // CSRF token for security
-                },
-                success: function(response) {
-                    alert('Abnormal values checked and notifications sent.');
-                },
-                error: function(error) {
-                    console.error('Error:', error);
-                }
-            });
-        });
-    });
-});
-
-
-</script>
 
 
 {% endblock %}

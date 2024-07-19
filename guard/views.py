@@ -60,8 +60,8 @@ def get_data(request, pk):
         for file in csv_data:
             if file.file_type == 'oximeter values graph' and file.is_latest:
                 context['oximeter_values_graph'] = json.dumps(process_csv(file.data_file))
-            if file.file_type == 'ppG sensor graph' and file.is_latest:
-                context['ppG_sensor_graph'] = json.dumps(process_csv(file.data_file))
+            if file.file_type == 'accelo meter graph' and file.is_latest:
+                context['accelo_meter_graph'] = json.dumps(process_csv(file.data_file))
             
             if file.file_type == 'perspiration sensor' and file.is_latest:
                 context['perspiration_sensor'] = json.dumps(process_csv(file.data_file))
@@ -113,59 +113,45 @@ def process_csv(file):
 
 
 
-@csrf_exempt
-def check_abnormal_values(request):
-    if request.method == 'POST':
-        child_pk = request.POST.get('child_pk')
-        graph_name = request.POST.get('graph_name')
 
-        # Map graph names to file types
-        file_type_map = {
-            'oximeter': 'oximeter values graph',
-            'accelerometer': 'accelerometer values graph',
-            'perspiration': 'perspiration sensor'
-        }
+def check_abnormal_values(request, pk, graph_name):
+    # Fetch the child and parent objects
+    try:
+        parent = Parent.objects.get(username=request.user.username)
+        child = parent.children.get(pk=pk)
+    except Parent.DoesNotExist or Child.DoesNotExist:
+        return HttpResponse('Parent or child not found', status=404)
+    
+    # Retrieve the latest data file based on graph_name
+    try:
+        data_file = Csv_data.objects.filter(child=child, file_type=graph_name).latest('created_at')
+        data = process_csv(data_file.data_file)  # Assuming process_csv returns a list of dicts
+        last_entry = data[-1]  # Get the last entry
+    except Csv_data.DoesNotExist:
+        return HttpResponse('Data file not found', status=404)
 
-        file_type = file_type_map.get(graph_name)
-        if not file_type:
-            return JsonResponse({'status': 'error', 'message': 'Invalid graph name'})
+    # Example abnormal value checks (adapt as needed)
+    abnormal = False
+    if graph_name == 'oximeter values graph':
+        if last_entry['SpO2 (%)'] < 95 or last_entry['Heart Rate (bpm)'] < 60:
+            abnormal = True
+    elif graph_name == 'accelerometer values graph':
+        if (last_entry['X-axis (m/s^2)'] < -2 or last_entry['X-axis (m/s^2)'] > 2) or \
+           (last_entry['Y-axis (m/s^2)'] < -2 or last_entry['Y-axis (m/s^2)'] > 2) or \
+           (last_entry['Z-axis (m/s^2)'] < -2 or last_entry['Z-axis (m/s^2)'] > 2):
+            abnormal = True
+    elif graph_name == 'perspiration sensor':
+        if last_entry['Perspiration Level (µS)'] < 0.5:
+            abnormal = True
 
-        child = get_object_or_404(Child, pk=child_pk)
-        today = datetime.now().strftime('%Y-%m-%d')
-        data_file = Csv_data.objects.filter(child=child, file_type=file_type, created_at__date=today, is_latest=True).first()
-
-        if not data_file:
-            return JsonResponse({'status': 'error', 'message': 'No data file found'})
-
-        # Process the CSV file
-        data = processing_csv(data_file.data_file)
-
-        if not data:
-            return JsonResponse({'status': 'error', 'message': 'No data available in the file'})
-
-        # Mark the latest data entry as abnormal
-        latest_entry = data[-1]  # Get the last data entry
-
-        # Notify parents
-        notify_parents(child, graph_name, latest_entry)
-
-        return JsonResponse({'status': 'success', 'message': 'Abnormal value flagged and notification sent.'})
-
-def processing_csv(file):
-    df = pd.read_csv(file)
-    df['Timestamp'] = pd.to_datetime(df['Timestamp'], errors='coerce')
-    return df.to_dict(orient='records')
-
-def notify_parents(child, sensor_type, data_entry):
-    parents = Parent.objects.filter(children=child)
-    subject = f"Abnormal {sensor_type.capitalize()} Data Detected"
-    message = f"Dear Parent,\n\nAn abnormal {sensor_type} data entry has been detected for your child {child.name}.\n\nDetails:\n{data_entry}\n\nPlease review the data and consult with a healthcare provider if necessary.\n\nBest regards,\nChildGuard Team"
-
-    for parent in parents:
+    if abnormal:
+        # Send email to the parent
         send_mail(
-            subject,
-            message,
-            settings.DEFAULT_FROM_EMAIL,
-            [parent.email],
+            'Abnormal Values Detected',
+            f'Abnormal values detected in the latest data for child ID {pk}.',
+            'from@example.com',  # Replace with your email
+            [parent.email],       # Assuming Parent model has an email field
             fail_silently=False,
         )
+
+    return HttpResponse('Abnormal values checked and notifications sent.')
